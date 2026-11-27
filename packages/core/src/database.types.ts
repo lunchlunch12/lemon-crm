@@ -4148,6 +4148,9 @@ isOneToOne: false
                 }
           }
           Functions: {
+            xero_acquire_lease: { Args: { p_company: string }; Returns: string | null },
+            xero_release_lease: { Args: { p_company: string; p_lease: string }; Returns: undefined },
+            xero_save_connection: { Args: { p_company: string; p_lease: string; p_ciphertext: string; p_expires: string | null; p_connected: boolean }; Returns: undefined },
             "accept_hub_range":
 { Args: { "p_company": string,"p_option"?: string,"p_quote": string }; Returns: string
                            },
