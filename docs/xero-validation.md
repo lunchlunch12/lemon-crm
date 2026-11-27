@@ -10,6 +10,8 @@ Xero candidate `dfbdc7c4f4643340dcab27ba686cddc32a0e4980` includes corrected mai
 
 These checks satisfy the previously outstanding automated Linux/DB/upgrade/instance/browser gates for this candidate. Xero Demo Company consent, actual provider token rotation and real iPhone Safari acceptance still require the isolated TEST environment and owner participation. Do not confuse the generic browser suite with successful real-provider OAuth acceptance.
 
+Documentation head `5d2da6c622af9267372e0b68c3adfb664409d63a` also passed all five jobs in [run 45945620167](https://github.com/lunchlunch12/lemon-crm/actions/runs/45945620167). Subsequent status-only documentation edits leave the deployed application code unchanged. In Railway TEST, all five services reached successful deployments with running replicas. The app passed its startup healthcheck and logged the new Xero migration as applied. A temporary TEST edge rule blocks public setup/config access with HTTP 403 until the owner is present. Real-provider and iPhone acceptance remain pending.
+
 ## Checks performed locally
 
 | Check | Result |

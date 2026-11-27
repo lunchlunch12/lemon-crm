@@ -1,8 +1,8 @@
 # Xero setup for Lemon Clean — owner instructions
 
-This is preparation for a reviewed **test deployment**. The code has not been deployed by this task. Do not connect your real Xero organisation, change live Railway variables, or disconnect Jobber yet.
+The CI-passing connection code is deployed only in an isolated **TEST** environment. Public access is temporarily blocked for first-owner setup. Do not connect your real Xero organisation, change live Railway variables, or disconnect Jobber.
 
-Update 27 November 2026: the owner approved TEST preparation, and the Xero candidate passed full GitHub CI. A separate Lemon Clean TEST project and test domain have been created; the current exact test callback is supplied in the owner's private handoff document. The application must stay stopped until the owner is ready to create its first account: the first visitor to a fresh instance can claim ownership. No Xero client credentials have been entered or real provider consent performed. Read `xero-test-environment.md` before launch.
+Update 28 November 2026: the owner approved TEST preparation, and the Xero candidate passed full GitHub CI. All five Lemon Clean TEST services are healthy; the exact test callback is supplied in the owner's private handoff document. A TEST-only Railway edge rule must keep public access blocked until the owner is ready to create its first account: the first visitor to a fresh instance can claim ownership. No Xero client credentials have been entered or real provider consent performed. Read `xero-test-environment.md` before unlocking setup.
 
 ## Redirect address
 
