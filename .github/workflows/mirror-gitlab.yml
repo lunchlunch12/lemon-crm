@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   mirror:
+    if: github.repository == 'jviars/crewtavo'
     runs-on: ubuntu-latest
     steps:
       - env:

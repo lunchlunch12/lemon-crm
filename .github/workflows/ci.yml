@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/**', 'fix/**', 'docs/**']
   pull_request:
+  workflow_dispatch:
   # The release workflow runs all of this for the tagged commit before it publishes anything
   # (release.yml), so the checks stay in one place.
   workflow_call:
@@ -12,6 +13,9 @@ on:
 # (release.yml says why).
 permissions:
   contents: read
+
+env:
+  TZ: UTC
 
 jobs:
   check:
@@ -26,7 +30,7 @@ jobs:
       # when there isn't one. A release counts as a push too (called from release.yml, the event is
       # the tag's push), so what it adds is checked again before anything is published.
       - name: Authorship
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.repository == 'jviars/crewtavo'
         run: |
           since=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD^ 2>/dev/null || true)
           range="${since:+$since..}HEAD"
@@ -62,7 +66,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run test:upgrade
+      - name: Fetch the fork's original upstream baseline without publishing tags
+        if: github.repository != 'jviars/crewtavo'
+        run: git fetch https://github.com/jviars/crewtavo.git refs/tags/v0.5.5:refs/tags/upstream-v0.5.5
+      - name: Test upgrade from the original fork baseline
+        if: github.repository != 'jviars/crewtavo'
+        run: npm run test:upgrade -- upstream-v0.5.5
+      - if: github.repository == 'jviars/crewtavo'
+        run: npm run test:upgrade
 
   # A whole Crewtavo instance, as the Railway template creates it (docker-compose.yml): it must
   # start, apply every migration and reach the "create the owner account" step on its own.

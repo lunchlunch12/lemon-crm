@@ -25,12 +25,13 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   # A tag can be put on any commit. Only main's are released: a tag on a branch, or on a commit that
   # was never merged, would otherwise reach every instance.
   on-main:
+    # Fork releases require a separate, explicitly approved publishing design.
+    if: github.repository == 'jviars/crewtavo'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,12 +50,17 @@ jobs:
   # Every check CI runs, for the tagged commit: a called workflow checks out its caller's ref, the
   # tag. It needs nothing from the registry, so it doesn't get to write there.
   ci:
+    if: github.repository == 'jviars/crewtavo'
     needs: on-main
     permissions:
       contents: read
     uses: ./.github/workflows/ci.yml
 
   images:
+    if: github.repository == 'jviars/crewtavo'
+    permissions:
+      contents: read
+      packages: write
     needs: [on-main, ci]
     runs-on: ubuntu-latest
     steps:
