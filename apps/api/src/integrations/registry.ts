@@ -25,10 +25,11 @@
  * either chat app is the MCP connector at /mcp, added in Settings → AI assistants, and no app here.
  */
 import type { Env } from "../env";
+import { XERO_SCOPES } from "./xero";
 import { DIALOG, GRAPH_VERSION, META_SCOPES } from "./metaConfig";
 
 /** Apps with a row in integrations (and maybe integration_secrets). */
-export type Provider = "quickbooks" | "zoho_books" | "google_calendar" | "google_business" | "meta" | "stripe" | "twilio" | "anthropic" | "chatgpt" | "fal" | "railway" | "abc_supply" | "lob" | "open_meteo";
+export type Provider = "xero" | "quickbooks" | "zoho_books" | "google_calendar" | "google_business" | "meta" | "stripe" | "twilio" | "anthropic" | "chatgpt" | "fal" | "railway" | "abc_supply" | "lob" | "open_meteo";
 /** Apps whose calendars are added by link. They're also the calendar_sources.app values (with google_calendar). */
 export type LinkApp = "zoho_calendar" | "outlook_calendar" | "apple_calendar" | "ics_calendar";
 export type AppId = Provider | LinkApp | "team_chat" | "website_analytics" | "website_forms" | "careers" | "drive" | "marketing" | "paving" | "roofing" | "snow" | "sveltia";
@@ -52,6 +53,15 @@ export interface CatalogEntry {
 }
 
 export const CATALOG: CatalogEntry[] = [
+  {
+    id: "xero",
+    name: "Xero",
+    category: "Accounting",
+    description: "Connect securely and check your organisation. Financial synchronisation is not enabled yet.",
+    auth: "oauth",
+    docs: "https://developer.xero.com/documentation/guides/oauth2/overview/",
+    available: (env) => env.XERO_ENABLED === "true" && Boolean(env.XERO_CLIENT_ID && env.XERO_CLIENT_SECRET && env.XERO_REDIRECT_URI),
+  },
   {
     id: "team_chat",
     name: "Team Chat - Crewtavo",
@@ -380,6 +390,16 @@ const zohoAccounts = (env: Env, saved?: Record<string, string>) =>
   saved?.accounts_server ? zohoAccountsServer(saved.accounts_server) : (env.ZOHO_ACCOUNTS_URL ?? "https://accounts.zoho.com").replace(/\/$/, "");
 
 export const OAUTH: Partial<Record<Provider, OAuthConfig>> = {
+  // Discovery/catalog metadata. Xero's dedicated owner-only router handles its flow,
+  // encrypted tenant state and database-fenced refresh instead of generic tokens.ts.
+  xero: {
+    authorizeUrl: () => "https://login.xero.com/identity/connect/authorize",
+    tokenUrl: () => "https://identity.xero.com/connect/token",
+    scope: XERO_SCOPES,
+    clientId: (env) => env.XERO_CLIENT_ID,
+    clientSecret: (env) => env.XERO_CLIENT_SECRET,
+    clientAuth: "basic",
+  },
   quickbooks: {
     authorizeUrl: () => "https://appcenter.intuit.com/connect/oauth2",
     tokenUrl: () => "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
