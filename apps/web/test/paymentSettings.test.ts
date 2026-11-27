@@ -260,7 +260,7 @@ describe("Settings → Payments", () => {
 describe("tips have one switch", () => {
   it("is written only by Settings → Company", () => {
     // An object key set to a value (not a type saying what one is).
-    const writers = sources().filter((f) => /\bhub_tips\s*:(?!\s*(?:boolean|unknown|string|number)\b)/.test(f.code)).map((f) => f.path);
+    const writers = sources().filter((f) => /\bhub_tips\s*:(?!\s*(?:boolean|unknown|string|number)\b)/.test(f.code)).map((f) => f.path.replaceAll("\\", "/"));
     expect(writers).toEqual(["features/settings/CompanySettings.tsx"]);
   });
 
