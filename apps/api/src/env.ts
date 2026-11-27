@@ -8,6 +8,13 @@ import type { Permission, Role } from "@crewtavo/core";
  * Either Supabase key style works (publishable/secret or the legacy anon/service_role).
  */
 export interface Env {
+  /** Xero connection foundation only. Keep disabled until a reviewed test deployment. */
+  XERO_ENABLED?: string;
+  XERO_CLIENT_ID?: string;
+  XERO_CLIENT_SECRET?: string;
+  XERO_REDIRECT_URI?: string;
+  /** Allows selecting a non-demo organisation for read-only checks; false by default. */
+  XERO_ALLOW_LIVE_CONNECTION?: string;
   SUPABASE_URL: string;
   SUPABASE_PUBLISHABLE_KEY?: string;
   SUPABASE_ANON_KEY?: string; // legacy name
@@ -105,6 +112,8 @@ export interface Env {
 }
 
 export interface Vars {
+  /** OAuth assistant clients must never access protected Xero connection metadata. */
+  oauthClientId?: string | null;
   userId: string;
   token: string;
   /** The sign-in this token belongs to (its session_id claim; empty for a token without one). */
