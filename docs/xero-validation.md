@@ -2,6 +2,14 @@
 
 Review date: 27 November 2026. Base: `36987955d11f063b24ab65d92211474d0107242a` (upstream v0.5.5). This covers the connection/configuration increment, not the future financial integration.
 
+## GitHub CI after workflow correction
+
+Workflow safety PR #2 passed all four substantive jobs on both its push and PR runs (`45939247361`, `45939288461`), then was merged with explicit owner approval while production auto-deploys were disabled.
+
+Xero candidate `dfbdc7c4f4643340dcab27ba686cddc32a0e4980` includes corrected main and retains the secret-scanning job. Its [CI run 45940732466](https://github.com/lunchlunch12/lemon-crm/actions/runs/45940732466) passed **check, upgrade, instance, browser and secrets**. This includes normal Linux dependency installation, typechecking/unit tests, full Docker database tests and upgrade from v0.5.5, production build, fresh-instance startup, lifecycle/end-to-end and browser tests. No Xero/production credentials were provided to CI. Later documentation-only updates do not change the tested application code.
+
+These checks satisfy the previously outstanding automated Linux/DB/upgrade/instance/browser gates for this candidate. Xero Demo Company consent, actual provider token rotation and real iPhone Safari acceptance still require the isolated TEST environment and owner participation. Do not confuse the generic browser suite with successful real-provider OAuth acceptance.
+
 ## Checks performed locally
 
 | Check | Result |
@@ -32,12 +40,12 @@ Dependencies came from the committed lockfile with install scripts disabled. Bec
 
 Gitleaks initially found 39 inherited fixture matches: mock link/provider strings and self-signed test keys. Only their exact reviewed historical fingerprints are ignored. No whole directory/rule is exempted. A synthetic credential check confirmed the added Xero credential rule detects a new non-placeholder value. Pattern scanning cannot guarantee that all personal data or every possible secret is absent.
 
-## Required before deployment approval
+## Release gates and owner acceptance
 
-1. Publish the reviewed feature branch and run GitHub CI with normal Linux dependency installation.
-2. Pass full Docker-backed `test:db` and `test:upgrade` from the original fork baseline, instance startup, end-to-end and browser checks. Bash/Docker were unavailable locally; these have not been run here.
+1. Keep the Xero PR in draft. Publish code changes only to its review branch and require passing CI for each new application candidate.
+2. Automated Linux database/upgrade/instance/end-to-end/browser checks passed in GitHub CI for the candidate above; they were unavailable on the local Windows host. Repeat for subsequent application/migration changes.
 3. Independently review OAuth handling, server-only credentials, service-role RPC permissions, lease expiry and failed token-save recovery. Confirm hosting/edge logs do not retain sensitive callback query strings.
-4. Approve and create an isolated TEST stack with its own database, secrets and domain. Do not use production database references, encryption keys or provider credentials.
+4. The owner has approved isolated TEST preparation. Use its own database, secrets and domain. Do not use production database references, encryption keys or provider credentials. See `xero-test-environment.md` for current preparation boundaries.
 5. After reviewed code is deployed only to TEST, perform Xero Demo Company consent, select/check/reconnect/disconnect tests, plus desktop and real iPhone Safari acceptance.
 
 Do not enable live organisation access, financial sync, Jobber migration, customer communications or production deployment on the strength of these local results. Live mode and financial sync are server-blocked in this increment. No live Xero API calls, real-data migrations, production configuration changes or customer sends were performed by this task.

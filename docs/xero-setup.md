@@ -2,6 +2,8 @@
 
 This is preparation for a reviewed **test deployment**. The code has not been deployed by this task. Do not connect your real Xero organisation, change live Railway variables, or disconnect Jobber yet.
 
+Update 27 November 2026: the owner approved TEST preparation, and the Xero candidate passed full GitHub CI. A separate Lemon Clean TEST project and test domain have been created; the current exact test callback is supplied in the owner's private handoff document. The application must stay stopped until the owner is ready to create its first account: the first visitor to a fresh instance can claim ownership. No Xero client credentials have been entered or real provider consent performed. Read `xero-test-environment.md` before launch.
+
 ## Redirect address
 
 The existing Railway custom domain was verified read-only on 27 November 2026. The eventual production redirect URI is:
@@ -10,7 +12,7 @@ The existing Railway custom domain was verified read-only on 27 November 2026. T
 https://crm.lemonclean.co.nz/api/apps/xero/callback
 ```
 
-This address becomes usable only after reviewed code is deployed and the server's `APP_URL` and `XERO_REDIRECT_URI` both use that address. A test environment requires its OWN domain followed by `/api/apps/xero/callback`. No separate Railway test environment/domain was found at inspection, so no exact test URI is established yet. Do not point a test app's callback at production. You can register multiple permitted redirect URIs in the developer app when appropriate; separate test/production developer apps are preferable.
+This production address becomes usable only after separately approved code is deployed and the server's `APP_URL` uses its origin and `XERO_REDIRECT_URI` uses this complete callback. TEST uses its OWN domain followed by `/api/apps/xero/callback`; use the exact test callback from the owner's handoff. Do not point a test app's callback at production. You can register multiple permitted redirect URIs when appropriate; separate test/production developer apps are preferable.
 
 ## Create the developer app (manual, no connection yet)
 
