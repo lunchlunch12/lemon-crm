@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feature/**', 'docs/**']
+    branches: [main, 'feature/**', 'fix/**', 'docs/**']
   pull_request:
+  workflow_dispatch:
   # The release workflow runs all of this for the tagged commit before it publishes anything
   # (release.yml), so the checks stay in one place.
   workflow_call:
@@ -12,6 +13,9 @@ on:
 # (release.yml says why).
 permissions:
   contents: read
+
+env:
+  TZ: UTC
 
 jobs:
   secrets:
