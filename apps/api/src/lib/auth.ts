@@ -36,6 +36,7 @@ export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
     if (held.state === "off") throw new HttpError(403, assistantsOff(held.company));
   }
   c.set("userId", sub);
+  c.set("oauthClientId", client);
   c.set("token", token);
   c.set("sessionId", typeof data.claims.session_id === "string" ? data.claims.session_id : "");
   const meta = (data.claims as { app_metadata?: unknown }).app_metadata;
