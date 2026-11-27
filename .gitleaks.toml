@@ -1,0 +1,13 @@
+title = "Lemon CRM secret scanning"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "lemon-xero-runtime-credential"
+description = "Xero runtime credentials must never be committed"
+regex = '''(?i)(?:XERO_CLIENT_ID|XERO_CLIENT_SECRET|XERO_WEBHOOK_KEY|XERO_WEBHOOK_SECRET)\s*[=:]\s*["']?([A-Za-z0-9_+/=.-]{20,})'''
+secretGroup = 1
+[[rules.allowlists]]
+description = "Explicit placeholder names and deliberately fictional test strings only"
+regexTarget = "secret"
+regexes = ['''^YOUR_XERO_CLIENT_(?:ID|SECRET)$''', '''^fictional_[A-Za-z0-9_]+$''']
