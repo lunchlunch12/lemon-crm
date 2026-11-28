@@ -1,5 +1,13 @@
 # Xero setup for Lemon Clean — owner instructions
 
+## Current status - 28 November 2026
+
+The separate TEST owner account and Demo Company connection are established. The owner confirmed connection checks on computer and actual iPhone. A check after the original access-token lifetime passed without signing in again; remote disconnect survived reload, and reconnect plus organisation selection/check succeeded. These observations supersede the historical pending statements below.
+
+The customer/contact increment adds `accounting.contacts` to consent, retaining `offline_access` and `accounting.settings.read`. Existing grants still support connection checks and renewal. After CI and TEST deployment, reconnect to Demo Company only for contact permission. Contact switches start paused/off; reconnect never enables sync. New-stage deployed acceptance remains required. Invoice/payment/quote writes remain unavailable. Integration pricing basis and calculator do not change existing CRM invoice entry or totals; that work belongs to the financial stage. Imported Xero contacts trigger a persistent company AI privacy restriction. No production or live-Xero changes are authorised.
+
+The remainder records the earlier connection release and setup process.
+
 The CI-passing connection code is deployed only in an isolated **TEST** environment. Public access is temporarily blocked for first-owner setup. Do not connect your real Xero organisation, change live Railway variables, or disconnect Jobber.
 
 Update 28 November 2026: the owner approved TEST preparation, and the Xero candidate passed full GitHub CI. All five Lemon Clean TEST services are healthy; the exact test callback is supplied in the owner's private handoff document. A TEST-only Railway edge rule must keep public access blocked until the owner is ready to create its first account: the first visitor to a fresh instance can claim ownership. No Xero client credentials have been entered or real provider consent performed. Read `xero-test-environment.md` before unlocking setup.

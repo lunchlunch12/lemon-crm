@@ -1,5 +1,13 @@
 # Xero connection: validation and release gates
 
+## Current status - 28 November 2026
+
+The separate TEST owner account and Demo Company connection are established. The owner confirmed connection checks on computer and actual iPhone. A check after the original access-token lifetime passed without signing in again; remote disconnect survived reload, and reconnect plus organisation selection/check succeeded. These observations supersede the historical pending statements below.
+
+The customer/contact increment adds `accounting.contacts` to consent, retaining `offline_access` and `accounting.settings.read`. Existing grants still support connection checks and renewal. After CI and TEST deployment, reconnect to Demo Company only for contact permission. Contact switches start paused/off; reconnect never enables sync. New-stage deployed acceptance remains required. Invoice/payment/quote writes remain unavailable. Integration pricing basis and calculator do not change existing CRM invoice entry or totals; that work belongs to the financial stage. Imported Xero contacts trigger a persistent company AI privacy restriction. No production or live-Xero changes are authorised.
+
+The remainder records the earlier connection release and setup process.
+
 Review date: 27 November 2026. Base: `36987955d11f063b24ab65d92211474d0107242a` (upstream v0.5.5). This covers the connection/configuration increment, not the future financial integration.
 
 ## GitHub CI after workflow correction
