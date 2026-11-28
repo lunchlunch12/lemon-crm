@@ -5,7 +5,7 @@ import type { Db } from "../lib/supabase";
 import { HttpError } from "../lib/http";
 import { decryptJson, encryptJson } from "../lib/crypto";
 import { loadXero, saveXero, xeroAccess, xeroOrganisation, type XeroState } from "./xero";
-import { canonical, changedFields, contactNumber, contactSchema, digest, localProjection, matchCandidates, remoteContactSchema, remotePayload, remoteProjection, type ContactProjection, type LocalContact, type RemoteContact } from "./xeroModel";
+import { canonical, changedFields, contactNumber, contactSchema, digest, localProjection, matchCandidates, remoteContactSchema, remoteIdentity, remotePayload, remoteProjection, type ContactProjection, type LocalContact, type RemoteContact } from "./xeroModel";
 export interface SyncSettings {
     paused: boolean;
     incoming: boolean;
@@ -289,14 +289,12 @@ export async function previewContacts(ctx: SyncContext, direction: "incoming" | 
             }
             else {
                 const candidatePool = direction === "incoming" ? inv.clients.filter(c => !inv.links.some(l => l.local_id === c.id)).map(c => ({ id: c.id, contact: safeLocal(c) }))
-                    : remotes.filter(c => !inv.links.some(l => l.remote_id === c.ContactID)).flatMap(c => { try {
-                        return [{ id: c.ContactID, contact: safeProjection(c) }];
-                    }
-                    catch {
-                        return [];
-                    } });
+                    : remotes.filter(c => !inv.links.some(l => l.remote_id === c.ContactID)).map(c => ({ id: c.ContactID, contact: remoteIdentity(c) }));
                 const candidates = matchCandidates(direction === "incoming" ? row.remoteProjection! : row.localProjection!, candidatePool);
                 const reserved = localSource ? remotes.filter(c => c.ContactNumber === contactNumber(localSource.id)) : [];
+                // Unsupported terms/addresses must not hide a possible identity and permit a duplicate.
+                if (direction === "outgoing")
+                    for (const c of remotes.filter(c => candidates.some(m => m.id === c.ContactID) || reserved.some(r => r.ContactID === c.ContactID))) safeProjection(c);
                 row.candidates = candidates.map(c => ({ ...c, name: direction === "incoming" ? inv.clients.find(l => l.id === c.id)!.display_name : remotes.find(r => r.ContactID === c.id)!.Name }));
                 for (const r of reserved)
                     if (!row.candidates.some(c => c.id === r.ContactID))
@@ -394,17 +392,12 @@ export async function applyContact(ctx: SyncContext, input: z.infer<typeof apply
     }
     if (preview.direction === "incoming" && local?.people.some(p => !target.people.some(q => (q.email && q.email.toLowerCase() === p.email?.toLowerCase()) || q.name.toLowerCase() === p.name.toLowerCase())))
         throw new HttpError(409, "CRM has an additional contact person. Review that person before importing this version.");
-    if (preview.direction === "outgoing" && rp?.payment_terms_days !== null && target.payment_terms_days === null)
+    if (preview.direction === "outgoing" && rp && rp.payment_terms_days !== null && target.payment_terms_days === null)
         throw new HttpError(409, "Clearing an existing Xero payment-term rule needs manual review.");
     const localId = local?.id ?? crypto.randomUUID();
     if (preview.direction === "outgoing" && !remote) {
         const current = await contacts(ctx); // A contact may have appeared since the original preview.
-        const possible = matchCandidates(target, current.flatMap(r => { try {
-            return [{ id: r.ContactID, contact: safeProjection(r) }];
-        }
-        catch {
-            return [];
-        } }));
+        const possible = matchCandidates(target, current.map(r => ({ id: r.ContactID, contact: remoteIdentity(r) })));
         if (current.some(r => r.ContactNumber === contactNumber(localId)) || possible.some(c => !input.create_separate || !row.candidates.some(old => old.id === c.id)))
             throw new HttpError(409, "A possible existing Xero customer appeared or changed. Refresh the matching preview before creating.");
     }

@@ -53,6 +53,14 @@ const byPerson = (a: {
     name: string;
     email: string | null;
 }) => `${a.email ?? ""}:${a.name}`.localeCompare(`${b.email ?? ""}:${b.name}`, "en");
+type ContactIdentity = Pick<ContactProjection, "display_name" | "company_name" | "email" | "phone">;
+/** Identity evidence remains usable even when other fields cannot be synchronised. */
+export function remoteIdentity(c: RemoteContact): ContactIdentity {
+    const person = [clean(c.FirstName), clean(c.LastName)].filter(Boolean).join(" ");
+    const phone = c.Phones.find(p => p.PhoneType === "DEFAULT" && clean(p.PhoneNumber)) ?? c.Phones.find(p => p.PhoneType === "MOBILE" && clean(p.PhoneNumber));
+    return { display_name: person || c.Name, company_name: person && nameKey(person) !== nameKey(c.Name) ? c.Name : null,
+        email: clean(c.EmailAddress)?.toLowerCase() ?? null, phone: phone ? clean([phone.PhoneCountryCode, phone.PhoneAreaCode, phone.PhoneNumber].filter(Boolean).join(" ")) : null };
+}
 export function localProjection(c: LocalContact): ContactProjection {
     const a = c.billing_address && typeof c.billing_address === "object" ? c.billing_address as Record<string, unknown> : {};
     return contactSchema.parse({ display_name: c.display_name.trim(), company_name: clean(c.company_name), email: clean(c.email)?.toLowerCase() ?? null, phone: clean(c.phone),
@@ -109,15 +117,21 @@ export function canonical(value: unknown): string {
 export async function digest(value: unknown): Promise<string> { return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical(value))))).map(n => n.toString(16).padStart(2, "0")).join(""); }
 export function changedFields(a: ContactProjection, b: ContactProjection): string[] { return (Object.keys(a) as Array<keyof ContactProjection>).filter(k => canonical(a[k]) !== canonical(b[k])); }
 export function conflictingFields(base: ContactProjection, local: ContactProjection, remote: ContactProjection): string[] { return changedFields(base, local).filter(k => changedFields(base, remote).includes(k) && canonical(local[k as keyof ContactProjection]) !== canonical(remote[k as keyof ContactProjection])); }
-export function matchCandidates(c: ContactProjection, others: Array<{
+export function matchCandidates(c: ContactIdentity, others: Array<{
     id: string;
-    contact: ContactProjection;
+    contact: ContactIdentity;
 }>) {
     return others.filter(({ contact: o }) => (emailKey(c.email) && emailKey(c.email) === emailKey(o.email)) || (phoneKey(c.phone) && phoneKey(c.phone) === phoneKey(o.phone)) || nameKey(c.display_name) === nameKey(o.display_name) || (c.company_name && nameKey(c.company_name) === nameKey(o.company_name))).map(({ id, contact: o }) => ({ id, evidence: [...(emailKey(c.email) && emailKey(c.email) === emailKey(o.email) ? ["email"] : []), ...(phoneKey(c.phone) && phoneKey(c.phone) === phoneKey(o.phone) ? ["phone"] : []), ...(nameKey(c.display_name) === nameKey(o.display_name) ? ["name"] : [])] }));
 }
 const decimal = z.union([z.string().regex(/^-?\d{1,9}(?:\.\d{1,4})?$/), z.number().finite().min(-999999999).max(999999999).refine(n => /^-?\d{1,9}(?:\.\d{1,4})?$/.test(String(n)))]);
 export const pricingSchema = z.object({ basis: z.enum(["Inclusive", "Exclusive", "NoTax"]), lines: z.array(z.object({ quantity: decimal, unit_price: decimal, tax_percent: decimal })).min(1).max(100) });
 const roundDivide = (n: bigint, d: bigint) => { const v = ((n < 0n ? -n : n) * 2n + d) / (2n * d); return n < 0n ? -v : v; };
+// Keep currency output within an exact minor-unit range, including two-decimal display.
+const currencyAmount = (minor: bigint) => {
+    if (minor < -1000000000000000n || minor > 1000000000000000n)
+        throw new Error("The calculated amount exceeds the supported NZD range.");
+    return Number(minor) / 100;
+};
 /** NZD minor units; tax rounded per line, never via binary floating-point multiplication. */
 export function pricingPreview(input: z.infer<typeof pricingSchema>) {
     let net = 0n, tax = 0n;
@@ -130,7 +144,7 @@ export function pricingPreview(input: z.infer<typeof pricingSchema>) {
         const n = input.basis === "Inclusive" ? amount - t : amount;
         net += n;
         tax += t;
-        return { net: Number(n) / 100, tax: Number(t) / 100, total: Number(n + t) / 100 };
+        return { net: currencyAmount(n), tax: currencyAmount(t), total: currencyAmount(n + t) };
     });
-    return { currency: "NZD", basis: input.basis, lines, net: Number(net) / 100, tax: Number(tax) / 100, total: Number(net + tax) / 100 };
+    return { currency: "NZD", basis: input.basis, lines, net: currencyAmount(net), tax: currencyAmount(tax), total: currencyAmount(net + tax) };
 }
