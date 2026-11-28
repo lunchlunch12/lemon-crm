@@ -33,7 +33,7 @@ export function memoryClient(source: MemoryDb | (() => MemoryDb), who: Row | (()
       const db = world();
       db.rpcs.push({ fn, args });
       // Rate limits have room unless the test says otherwise.
-      const run = db.rpc[fn] ?? (fn === "rate_limit_hit" ? () => true : null);
+      const run = db.rpc[fn] ?? (fn === "rate_limit_hit" ? () => true : fn === "xero_ai_blocked" ? () => false : null);
       return run ? { data: await run(args, db), error: null } : { data: null, error: { message: `no function ${fn}` } };
     },
     from: (table: string) => {
