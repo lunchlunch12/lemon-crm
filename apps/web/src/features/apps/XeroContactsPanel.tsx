@@ -88,7 +88,7 @@ function Comparison({ local, remote }: {
     local: Projection | null;
     remote: Projection | null;
 }) {
-    return <div style={{ overflowX: "auto" }}><table><caption>Review the supported fields before applying</caption><thead><tr><th>Field</th><th>Lemon CRM</th><th>Xero</th></tr></thead><tbody>{Object.entries(labels).map(([key, label]) => <tr key={key}><th>{label}</th><td>{show(local?.[key])}</td><td>{show(remote?.[key])}</td></tr>)}</tbody></table></div>;
+    return <div role="region" aria-label="Customer field comparison" tabIndex={0} style={{ overflowX: "auto" }}><table><caption>Review the supported fields before applying</caption><thead><tr><th>Field</th><th>Lemon CRM</th><th>Xero</th></tr></thead><tbody>{Object.entries(labels).map(([key, label]) => <tr key={key}><th>{label}</th><td>{show(local?.[key])}</td><td>{show(remote?.[key])}</td></tr>)}</tbody></table></div>;
 }
 function ReviewRow({ row, preview, busy, enabled, onApply }: {
     row: Row;
