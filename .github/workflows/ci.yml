@@ -85,6 +85,9 @@ jobs:
       - name: Test upgrade from the original fork baseline
         if: github.repository != 'jviars/crewtavo'
         run: npm run test:upgrade -- upstream-v0.5.5
+      - name: Test upgrade from the deployed Xero connection revision
+        if: github.repository == 'lunchlunch12/lemon-crm'
+        run: npm run test:upgrade -- 4d0895c683b3f353c1dc2bd34e9e23947a201cd0
       - if: github.repository == 'jviars/crewtavo'
         run: npm run test:upgrade
 
