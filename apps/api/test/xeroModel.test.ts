@@ -23,6 +23,10 @@ describe("identity and field conflicts", () => {
     it("uses validated durable contact codes within Xero's 50 character limit", () => { expect(contactNumber(id).length).toBeLessThanOrEqual(50); expect(() => contactNumber('bad" or injection')).toThrow(); });
 });
 describe("NZD GST arithmetic", () => {
+    it("rejects oversized line results and accumulated totals before numeric conversion", () => {
+        expect(() => pricingPreview({ basis: "Exclusive", lines: [{ quantity: "999999999", unit_price: "999999999", tax_percent: "15" }] })).toThrow(/supported NZD range/);
+        expect(() => pricingPreview({ basis: "NoTax", lines: Array.from({ length: 100 }, () => ({ quantity: "10000", unit_price: "999999999", tax_percent: "0" })) })).toThrow(/supported NZD range/);
+    });
     it.each([
         ["Inclusive", "115", "15", 100, 15, 115], ["Exclusive", "100", "15", 100, 15, 115], ["NoTax", "115", "15", 115, 0, 115],
         ["Inclusive", "100", "15", 86.96, 13.04, 100], ["Exclusive", "25.63", "15", 25.63, 3.84, 29.47],

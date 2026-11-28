@@ -83,6 +83,18 @@ function setup(initial: LocalContact[] = [], initialRemote: ReturnType<typeof co
 afterEach(() => vi.unstubAllGlobals());
 const input = (p: any, row = 0, extra: Record<string, unknown> = {}) => ({ preview_id: p.id, row_id: p.rows[row].id, create_separate: false, resolve: false, ...extra });
 describe("reviewed customer identity", () => {
+    it("creates a customer without payment terms without treating it as clearing existing terms", async () => {
+        const f = setup([client({ payment_terms_days: null })]);
+        await applyContact(f.ctx, input(await previewContacts(f.ctx, "outgoing")));
+        expect(f.calls.filter(c => c.method === "POST")).toHaveLength(1);
+    });
+    it("blocks a matching contact with unsupported terms instead of treating it as absent", async () => {
+        const f = setup([client()], [contact({ PaymentTerms: { Sales: { Type: "OFFOLLOWINGMONTH", Day: 20 } } })]);
+        const p = await previewContacts(f.ctx, "outgoing");
+        expect(p!.rows[0].action).toBe("blocked");
+        await expect(applyContact(f.ctx, input(p))).rejects.toThrow(/not ready/);
+        expect(f.calls.some(c => c.method === "POST")).toBe(false);
+    });
     it("requires review for a name/email candidate rather than creating a duplicate", async () => { const f = setup([client()], [contact()]); const p = await previewContacts(f.ctx, "outgoing"); expect(p!.rows[0].action).toBe("review"); await expect(applyContact(f.ctx, input(p))).rejects.toThrow(/Review the possible matches/); expect(f.calls.some(c => c.method === "POST")).toBe(false); });
     it("uses the reserved identity even when the name and email both changed", async () => { const f = setup([client()], [contact({ Name: "Old fictional name", EmailAddress: "old@example.test", ContactNumber: contactNumber(LOCAL) })]); const p = await previewContacts(f.ctx, "incoming"); expect(p!.rows[0].candidates[0].evidence).toContain("reserved contact code"); await expect(applyContact(f.ctx, input(p, 0, { create_separate: true }))).rejects.toThrow(/durable code/); });
     it("rejects a chosen candidate changed after the preview", async () => { const f = setup([client()], [contact()]); const p = await previewContacts(f.ctx, "outgoing"); f.setRemote([contact({ EmailAddress: "changed@example.test" })]); await expect(applyContact(f.ctx, input(p, 0, { candidate_id: REMOTE }))).rejects.toThrow(/Xero customer changed/); expect(f.calls.some(c => c.method === "POST")).toBe(false); });
@@ -96,6 +108,13 @@ describe("reviewed customer identity", () => {
     it("does not infer absence from a truncated contact scan", async () => { const f = setup([client()]); f.setOverride(path => Response.json({ Contacts: Array.from({ length: 100 }, (_, n) => contact({ ContactID: `00000000-0000-4000-8000-${String(Number(new URL('https://example.test' + path).searchParams.get('page')) * 100 + n).padStart(12, '0')}`, Name: `Fictional ${n}`, EmailAddress: null })) })); await expect(previewContacts(f.ctx, "outgoing")).rejects.toThrow(/complete customer list exceeds/); expect(f.calls.some(c => c.method === "POST")).toBe(false); });
 });
 describe("uncertain writes and bounded retries", () => {
+    it("finds a newly appeared identity even when its other fields are unsupported", async () => {
+        const f = setup([client()]);
+        const p = await previewContacts(f.ctx, "outgoing");
+        f.setRemote([contact({ Addresses: [{ AddressType: "POBOX", AddressLine3: "Extra unsupported line" }] })]);
+        await expect(applyContact(f.ctx, input(p))).rejects.toThrow(/existing Xero customer appeared/);
+        expect(f.calls.some(c => c.method === "POST")).toBe(false);
+    });
     it("rechecks the full identity list immediately before an outgoing create", async () => { const f = setup([client()]); const p = await previewContacts(f.ctx, "outgoing"); f.setRemote([contact()]); await expect(applyContact(f.ctx, input(p))).rejects.toThrow(/existing Xero customer appeared/); expect(f.calls.some(c => c.method === "POST")).toBe(false); });
     it("preserves a disjoint local edit through an import and exports it on the next run", async () => {
         const f = setup([client()]);
