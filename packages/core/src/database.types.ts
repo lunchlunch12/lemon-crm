@@ -4151,6 +4151,11 @@ isOneToOne: false
             xero_acquire_lease: { Args: { p_company: string }; Returns: string | null },
             xero_release_lease: { Args: { p_company: string; p_lease: string }; Returns: undefined },
             xero_save_connection: { Args: { p_company: string; p_lease: string; p_ciphertext: string; p_expires: string | null; p_connected: boolean }; Returns: undefined },
+            xero_sync_read: { Args: { p_company: string; p_lease: string; p_tenant: string }; Returns: Json },
+            xero_sync_history: { Args: { p_company: string; p_tenant: string; p_lease: string; p_operation: string; p_direction: string; p_outcome: string; p_code: string }; Returns: undefined },
+            xero_sync_get_history: { Args: { p_company: string; p_tenant?: string | null }; Returns: Json },
+            xero_sync_apply_contact: { Args: { p_company: string; p_lease: string; p_tenant: string; p_local: string; p_remote: string; p_expected: Json | null; p_contact: Json | null; p_baseline: string; p_operation: string; p_origin: string; p_reviewed?: string[] }; Returns: Json },
+            xero_ai_blocked: { Args: { p_company: string }; Returns: boolean },
             "accept_hub_range":
 { Args: { "p_company": string,"p_option"?: string,"p_quote": string }; Returns: string
                            },
