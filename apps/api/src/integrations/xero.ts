@@ -7,7 +7,8 @@ import type { Db } from "../lib/supabase";
 
 // Least privilege for this increment: organisation metadata only. Add granular financial
 // scopes through reviewed re-consent when their corresponding features are implemented.
-export const XERO_SCOPES = "offline_access accounting.settings.read";
+export const XERO_CONNECTION_SCOPES = "offline_access accounting.settings.read";
+export const XERO_SCOPES = `${XERO_CONNECTION_SCOPES} accounting.contacts`;
 const IDENTITY = "https://identity.xero.com/connect/token";
 const CONNECTIONS = "https://api.xero.com/connections";
 const ORGANISATION = "https://api.xero.com/api.xro/2.0/Organisation";
@@ -22,6 +23,7 @@ export interface XeroState {
   pending?: { nonce: string; verifier: string; user: string; expires: number };
   selected?: XeroConnection & { demo: boolean };
   checked_at?: string;
+  sync?: import("./xeroSync").XeroSyncState;
 }
 export const newXeroState = (): XeroState => ({ version: 1, mode: "read_only", paused: true });
 export const configured = (env: Env) => env.XERO_ENABLED === "true" && Boolean(env.XERO_CLIENT_ID && env.XERO_CLIENT_SECRET && env.XERO_REDIRECT_URI);
@@ -88,7 +90,7 @@ export async function xeroTokens(env: Env, form: Record<string, string>): Promis
     body: new URLSearchParams(form),
   });
   const parsed = z.object({ access_token: z.string().min(1), refresh_token: z.string().min(1), expires_in: z.number().positive().max(86400), scope: z.string() }).safeParse(await json(response));
-  if (!parsed.success || !XERO_SCOPES.split(" ").every((s) => parsed.data.scope.split(" ").includes(s))) throw new HttpError(409, "Xero did not grant the required connection permissions. Reconnect.");
+  if (!parsed.success || !XERO_CONNECTION_SCOPES.split(" ").every((s) => parsed.data.scope.split(" ").includes(s))) throw new HttpError(409, "Xero did not grant the required connection permissions. Reconnect.");
   return { access: parsed.data.access_token, refresh: parsed.data.refresh_token, expires: Date.now() + parsed.data.expires_in * 1000, scopes: parsed.data.scope };
 }
 
