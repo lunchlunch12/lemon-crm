@@ -109,6 +109,7 @@ function functions(): World["rpc"] {
   const lapsed = (p: Row) => !p.locked_until || Date.parse(p.locked_until) < Date.now();
   return {
     rate_limit_hit: () => true,
+    xero_ai_blocked: () => false,
     social_photo_facts: (b, w) => w.tables.attachments!.filter((a) => a.company_id === b.p_company && b.p_ids.includes(a.id)).map((a) => {
       const client = w.tables.clients!.find((c) => c.id === a.client_id);
       const problem = !/^image\/(jpe?g|png)$/.test(a.content_type) ? "format" : !client ? "no_client" : client.social_photos_opt_out ? "client_opt_out" : null;

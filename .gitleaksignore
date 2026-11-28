@@ -1,0 +1,43 @@
+# Exact inherited upstream test-fixture findings reviewed on 2026-11-27.
+# Includes mock provider strings, fixture link tokens and self-signed test-only TLS keys.
+# No whole test directory or rule is ignored. New commits/findings still fail the scan.
+# Never add a real credential here; investigate and rotate/revoke it instead.
+ae5194cad919bcc47c6709b8d49deb91137f89a2:apps/api/test/analytics.test.ts:private-key:32
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/appKeys.test.ts:generic-api-key:256
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/appKeys.test.ts:generic-api-key:262
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/appKeys.test.ts:generic-api-key:271
+1a8ec332c7af4d62f486c8b34bf8ba9475b86f0b:apps/api/test/calendars.test.ts:private-key:24
+31972d60a98c38c8f64321b62f104b166ab6fc75:apps/api/test/guideShares.test.ts:generic-api-key:49
+efd9040baf3d3b1783b254890cb2cde88dac73c0:apps/api/test/lob.test.ts:generic-api-key:10
+efd9040baf3d3b1783b254890cb2cde88dac73c0:apps/api/test/lob.test.ts:generic-api-key:11
+efd9040baf3d3b1783b254890cb2cde88dac73c0:apps/api/test/lob.test.ts:stripe-access-token:33
+2cc9b0948189675368e108d70ac5ce5d90c7e44b:apps/api/test/paving.test.ts:generic-api-key:133
+2acbb3d48293a91c7eb043e5b9ba59f22f42c110:apps/api/test/postcards.test.ts:generic-api-key:13
+2acbb3d48293a91c7eb043e5b9ba59f22f42c110:apps/api/test/postcards.test.ts:generic-api-key:135
+2acbb3d48293a91c7eb043e5b9ba59f22f42c110:apps/api/test/postcards.test.ts:generic-api-key:212
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/postcards.test.ts:generic-api-key:236
+2acbb3d48293a91c7eb043e5b9ba59f22f42c110:apps/api/test/postcards.test.ts:generic-api-key:237
+12d09be7b77ce1cf3d5c0fcab68395fa3110f301:apps/api/test/postcards.test.ts:generic-api-key:266
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/postcards.test.ts:generic-api-key:288
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/postcards.test.ts:generic-api-key:300
+f5ff200ae2fbdb22d417f070bb49dc9938292a83:apps/api/test/postcards.test.ts:generic-api-key:309
+b39aff4a02df82fc6503a10b24a10113fb254145:apps/api/test/postcards.test.ts:generic-api-key:311
+b1dd66cd5c93ed7369ccb3a2e2c1b9cb4d57674a:apps/api/test/postcards.test.ts:generic-api-key:368
+b1dd66cd5c93ed7369ccb3a2e2c1b9cb4d57674a:apps/api/test/postcards.test.ts:generic-api-key:395
+39b5889a611aec42592a42136829fb0cf9ae0e86:apps/api/test/postcards.test.ts:generic-api-key:406
+80967dc6236e6a5b7f0a4d37ded52d04bc8ab287:apps/api/test/postcards.test.ts:generic-api-key:499
+80967dc6236e6a5b7f0a4d37ded52d04bc8ab287:apps/api/test/postcards.test.ts:generic-api-key:507
+47266e74b4193ea960d00f5b0d922e47ae770814:apps/api/test/reviews.test.ts:generic-api-key:360
+47266e74b4193ea960d00f5b0d922e47ae770814:apps/api/test/reviews.test.ts:generic-api-key:956
+47266e74b4193ea960d00f5b0d922e47ae770814:apps/api/test/reviews.test.ts:generic-api-key:960
+ded262735c0b0bc31dd4e15d1351720838985b4e:apps/api/test/showcases.test.ts:generic-api-key:17
+9c9826cee5f3f136df21c68f7207deecfde45dbc:apps/api/test/showcaseTags.test.ts:generic-api-key:11
+a689ae55e6c7f886088d537cc7d843672a82783f:apps/api/test/smtp.test.ts:private-key:11
+376e8d9436da82f2db8587a16e70e710c2bc2c4c:apps/api/test/storageBucket.test.ts:generic-api-key:88
+fc9b2cd869b9c27558659f9cc336d655c2430342:apps/api/test/stripeConnection.test.ts:generic-api-key:873
+fc9b2cd869b9c27558659f9cc336d655c2430342:apps/api/test/stripeConnection.test.ts:generic-api-key:991
+591f2a677200c7bfd3bb6202a8a4a1def61bb600:apps/api/test/webpush.test.ts:private-key:46
+fd33083b05dee805be3aaa2529ea7e8d7b07a6dc:apps/api/test/webpush.test.ts:private-key:46
+c3a9b2d85ad6126a573d83765032aba5dd4484dd:apps/api/test/website.test.ts:private-key:23
+ff6c435951e7affd7c4885c9d9350a4474ef9b1f:e2e/monitoring.spec.ts:generic-api-key:29
+9d026c83733e2fc86eb556f132086bb6c6645470:supabase/tests/quote_templates_test.sql:generic-api-key:37

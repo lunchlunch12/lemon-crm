@@ -107,6 +107,7 @@ function functions(): World["rpc"] {
   const lifted = (w: World, gone: Row[]) => [...new Set(gone.filter((r) => r.client_id && !r.deleted_at).map((r) => r.client_id as string))]
     .filter((client) => !w.tables.reviews!.some((r) => r.client_id === client && !r.deleted_at && !gone.includes(r)));
   return {
+    xero_ai_blocked: () => false,
     rate_limit_hit: (b, w) => {
       const hits = (w.tables.limits ??= []);
       hits.push({ key: b.p_key });

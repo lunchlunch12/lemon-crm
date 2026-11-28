@@ -147,7 +147,7 @@ describe("Figtree's widths", () => {
 
   it("are found with the renderer, in the source", () => {
     const dir = assetDir();
-    expect(dir.fonts).toMatch(/apps\/api\/assets\/fonts\/$/);
+    expect(dir.fonts.replaceAll("\\", "/")).toMatch(/apps\/api\/assets\/fonts\/$/);
     expect(dir.wasm).toMatch(/index_bg\.wasm$/);
   });
 });

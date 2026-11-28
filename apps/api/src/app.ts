@@ -14,6 +14,7 @@ import { account } from "./routes/account";
 import { analytics, pageViews } from "./routes/analytics";
 import { address, addressWellKnown } from "./routes/address";
 import { apps } from "./routes/apps";
+import { xero } from "./routes/xero";
 import { chatgpt } from "./routes/chatgpt";
 import { automations } from "./routes/automations";
 import { autopay } from "./routes/autopay";
@@ -97,6 +98,8 @@ app.route("/api", recovery);
 app.route("/api", signInCodes);
 app.route("/api", schedule);
 app.route("/api", sales);
+// Specific, owner-only Xero routes must precede the generic provider routes.
+app.route("/api/apps/xero", xero);
 app.route("/api", apps);
 app.route("/api", chatgpt);
 app.route("/api", automations);

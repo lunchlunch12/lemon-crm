@@ -22,6 +22,7 @@ vi.mock("../src/lib/supabase", () => {
   const client = () => ({
     auth: { getClaims: async () => ({ data: { claims: { sub: "viewer" } }, error: null }) },
     rpc: async (fn: string, args: Record<string, unknown>) => {
+      if(fn === "xero_ai_blocked") return {data:false,error:null};
       state.rpcs.push({ fn, args });
       if (fn === "rate_limit_hit") return { data: !(state.refuse?.(state.hits++) ?? false), error: null };
       if (fn === "job_estimated_materials") return { data: [{ service_id: null, name: "Top coat asphalt", unit: "ton" }], error: null };

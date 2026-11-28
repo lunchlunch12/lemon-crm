@@ -296,6 +296,15 @@ const CALENDAR_HIGHLIGHTS: AppInfo["highlights"] = [
 export const LINK_ACCESS = ["Read the events on the calendars you add", "Nothing else: it can't change the calendar"];
 
 export const APP_INFO: Record<string, AppInfo> = {
+  xero: {
+    developer: "Xero",
+    tagline: "Reviewed customer synchronisation with Xero Demo Company",
+    about: "Connect Xero Demo Company, review and match customers in both directions, and select existing accounts and GST rates. Invoice, quote and payment synchronisation remain unavailable in this stage.",
+    highlights: [],
+    access: ["Read organisation settings", "Read and apply reviewed customer/contact changes in Demo Company", "Keep the connection signed in"],
+    connectsWith: "Owner's Xero sign-in",
+    website: "https://www.xero.com/",
+  },
   team_chat: {
     developer: "Crewtavo",
     tagline: "Channels for the whole team, each crew and the office",

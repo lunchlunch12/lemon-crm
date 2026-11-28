@@ -80,6 +80,23 @@ const refused = async (run: () => Promise<unknown> = ask) => {
 beforeEach(() => keys({}));
 afterEach(() => vi.unstubAllGlobals());
 
+describe("Xero import privacy boundary",()=>{
+  it("blocks text and document prompts before any model request, even with a server key",async()=>{
+    world.db.rpc.xero_ai_blocked=()=>true;
+    const asked=serve({claude:claudeSays("must not be called")});
+    expect(await refused()).toEqual([403,"AI is paused for this business to protect imported Xero data."]);
+    expect(await aiAvailable(env,adminClient(env),{companyId:CO,userId:PAT})).toBe(false);
+    expect(await refused(()=>readDocument(env,{asker:{companyId:CO,userId:PAT},system:"Read",prompt:"Fictional protected input",file:{type:"image",mediaType:"image/png",base64:"fictional"}} as never))).toEqual([403,"AI is paused for this business to protect imported Xero data."]);
+    expect(asked).toHaveLength(0);
+  });
+  it("fails closed when the database cannot establish the privacy state",async()=>{
+    world.db.rpc.xero_ai_blocked=()=>null;
+    const asked=serve({claude:claudeSays("must not be called")});
+    expect(await refused()).toEqual([503,"AI privacy checks are unavailable. No data was sent."]);
+    expect(asked).toHaveLength(0);
+  });
+});
+
 describe("an answer from Claude", () => {
   it("comes back as its text when Claude finished it", async () => {
     const asked = serve({ claude: claudeSays(" We'll be there tomorrow. ") });

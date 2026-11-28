@@ -25,6 +25,7 @@ import { loadSecret } from "../integrations/tokens";
 import { asJson, HttpError } from "../lib/http";
 import { allow } from "../lib/limit";
 import { adminClient, type Db } from "../lib/supabase";
+import { xeroAiBlocked } from "../lib/xeroPrivacy";
 
 /**
  * Who an ask is for: the company, and the person who asked for it themselves while signed in.
@@ -95,6 +96,7 @@ export async function companyAi(env: Env, admin: Db, companyId: string): Promise
 
 /** Whether an ask from this person, or from the company alone (`userId` null), has a service to answer it: their own plan, or the company's key, or the deployment's. */
 export async function aiAvailable(env: Env, admin: Db, asker: Asker): Promise<boolean> {
+  if(await xeroAiBlocked(admin,asker.companyId))return false;
   if (await companyAi(env, admin, asker.companyId)) return true;
   if (!asker.userId) return false;
   const plan = await loadPlan(admin, { userId: asker.userId, companyId: asker.companyId }).catch(() => null);
@@ -207,6 +209,7 @@ export async function complete(env: Env, options: CompleteOptions): Promise<stri
 
 async function answer(env: Env, asker: Asker, ask: Ask): Promise<string> {
   const admin = adminClient(env);
+  if(await xeroAiBlocked(admin,asker.companyId))throw new HttpError(403,"AI is paused for this business to protect imported Xero data.");
   // The person's own plan first, for what they ask themselves. What it couldn't take goes on to the
   // company's key; with no key to go on to, why the plan couldn't is what they're told.
   let instead: HttpError | null = null;

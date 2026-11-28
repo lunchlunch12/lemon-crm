@@ -59,6 +59,7 @@ import { TwilioPanel } from "./TwilioPanel";
 import { useTradeAppSwitch } from "./tradeApps";
 import { WebsiteFormsPanel, useWebsiteFormsSwitch } from "./WebsiteFormsPanel";
 import { WebsitePanel } from "./WebsitePanel";
+import { XeroPanel } from "./XeroPanel";
 
 const GOOGLE_SETTINGS = "https://calendar.google.com/calendar/r/settings";
 // OpenAI: where a key is made, and where its credit is added.
@@ -126,6 +127,7 @@ export function AppDetailPage() {
       </>
     );
   }
+  if (app.id === "xero") return <XeroPanel key={app.id} />;
   return <AppListing key={app.id} app={app} all={apps.data!.apps} ai={apps.data!.ai} />;
 }
 

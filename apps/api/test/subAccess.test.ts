@@ -249,6 +249,8 @@ const PUBLIC_SUB_ROUTES = ["POST /api/auth/text-code", "POST /api/auth/text-code
  * with its own way of signing in fails the test below until it's listed here, and so decided about.
  */
 const NOT_SIGNED_IN_ROUTES = [
+  // Xero's no-store middleware and callback (one-use state/cookie/current ownership).
+  "ALL /api/apps/xero/*", "GET /api/apps/xero/callback",
   // Middleware for the whole app, the assistant endpoint and its well-known documents.
   "ALL /*", "ALL /mcp", "ALL /.well-known/*",
   // Before anyone signs in.
@@ -306,6 +308,17 @@ function signedInRoutes() {
     const key = `${r.method} ${r.path}`;
     routes.set(key, (routes.get(key) ?? false) || r.handler === requireUser);
   }
+  // The Xero sub-router has its own sanitising error handler, which wraps its
+  // prefix middleware. Enumerate its protected routes so each is still exercised
+  // as a subcontractor. A new endpoint remains unclassified until reviewed here.
+  for (const route of [
+    "GET /api/apps/xero/config", "POST /api/apps/xero/connect",
+    "POST /api/apps/xero/organisations", "POST /api/apps/xero/select",
+    "POST /api/apps/xero/check", "PUT /api/apps/xero/settings", "POST /api/apps/xero/disconnect",
+    "POST /api/apps/xero/sync/catalogue", "PUT /api/apps/xero/sync/settings", "POST /api/apps/xero/sync/preview",
+    "GET /api/apps/xero/sync/preview", "POST /api/apps/xero/sync/apply", "POST /api/apps/xero/sync/reconcile",
+    "GET /api/apps/xero/sync/history", "POST /api/apps/xero/sync/pricing",
+  ]) routes.set(route, true);
   return [...routes].filter(([, signedIn]) => signedIn).map(([key]) => key);
 }
 

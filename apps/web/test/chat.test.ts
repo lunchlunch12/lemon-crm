@@ -89,7 +89,8 @@ describe("message grouping", () => {
     expect(listTime("2026-10-19T13:52:00", now)).toMatch(/1:52/);
     expect(listTime("2026-10-18T08:00:00", now)).toBe("Yesterday");
     expect(listTime("2026-10-16T08:00:00", now)).toMatch(/Fri/);
-    expect(listTime("2026-10-02T08:00:00", now)).toMatch(/Oct 2/);
+    // The host's English locale may use US (Oct 2) or NZ (2 Oct) date order.
+    expect(listTime("2026-10-02T08:00:00", now)).toMatch(/\b(?:Oct 2|2 Oct)\b/);
     expect(listTime("2025-10-02T08:00:00", now)).toMatch(/2025/);
   });
 });
