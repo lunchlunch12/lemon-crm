@@ -35,7 +35,9 @@ begin
   if not public.xero_ai_blocked(c) then raise exception 'Imported data lacks sticky AI protection'; end if;
   perform set_config('request.jwt.claims','{"sub":"ec000000-0000-4000-8000-000000000001","role":"authenticated","client_id":"fictional_assistant"}',true);
   if private.assistant_switch()->>'state'<>'off' or public.assistant_switch()->>'state'<>'off' then raise exception 'Assistant bypassed imported-data protection'; end if;
+  perform set_config('request.jwt.claims','{"sub":"ec000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   update public.companies set settings=settings||'{"assistants":{"enabled":true}}'::jsonb where id=c;
+  perform set_config('request.jwt.claims','{"sub":"ec000000-0000-4000-8000-000000000001","role":"authenticated","client_id":"fictional_assistant"}',true);
   if private.assistant_switch()->>'state'<>'off' then raise exception 'Ordinary settings cleared Xero privacy gate'; end if;
   perform set_config('request.jwt.claims','{"sub":"ec000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   if private.assistant_switch()->>'state'<>'on' then raise exception 'Human owner was blocked'; end if;
