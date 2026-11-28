@@ -10,11 +10,13 @@ import { ErrorState, NoAccess } from "@/components/ui/States";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { CodeRow, Step, Steps, kit } from "./PanelKit";
+import { XeroContactsPanel, type ContactSyncConfig } from "./XeroContactsPanel";
 
 interface Config {
   enabled: boolean; configured: boolean; credentials_set: boolean; redirect_uri: string | null;
   mode: "read_only" | "demo"; paused: boolean; authorised: boolean;
   selected: { name: string; demo: boolean } | null; checked_at: string | null; token_expired: boolean;
+  contacts?:ContactSyncConfig;
 }
 
 /** No credential entry in the browser: protected runtime configuration only. */
@@ -52,7 +54,7 @@ export function XeroPanel() {
     <BackLink to="/apps">Apps</BackLink>
     <h1>Xero</h1>
     <p>Secure connection setup. Xero keeps the accounts; Lemon CRM handles the work and all customer messages.</p>
-    <div className="callout callout-info" role="note">This version connects and checks your organisation only. It does not synchronise customers, invoices, payments or quotes. Live mode is unavailable and all synchronisation remains paused.</div>
+    <div className="callout callout-info" role="note">Customer synchronisation is available only for Demo Company, with separate controls and reviewed changes. Invoices, payments and quotes are not synchronised. Live mode remains unavailable.</div>
     {params.has("status") && <div className={`callout ${params.get("status") === "connected" ? "callout-good" : "callout-warning"}`} role="status">
       {params.get("status") === "connected" ? "Xero sign-in completed. Choose the Demo Company below. No records have been synchronised." : "Xero sign-in could not be completed. Try connecting again; no records were synchronised."}
       <Button onClick={() => setParams({}, { replace: true })}>Dismiss</Button>
@@ -79,11 +81,10 @@ export function XeroPanel() {
         <Field label="Mode"><select value={data.mode} disabled={!data.configured || busy} onChange={(e) => update.mutate({ path: "settings", body: { mode: e.target.value, paused: true } })}>
           <option value="read_only">Read only — connection checks</option><option value="demo">Demo — Xero Demo Company only</option><option value="live" disabled>Live — not available yet</option>
         </select></Field>
-        <p><label><input type="checkbox" checked disabled readOnly /> All synchronisation paused</label></p>
-        <p><label><input type="checkbox" disabled /> Incoming record synchronisation (not built yet)</label></p>
-        <p><label><input type="checkbox" disabled /> Outgoing record synchronisation (not built yet)</label></p>
+        <p><label><input type="checkbox" checked disabled readOnly /> Invoice, payment and quote synchronisation paused</label></p>
         <p>Connection checks can refresh an expiring token without reading financial records. They do not email customers or change the accounts.</p>
       </Section>
+      {data.selected?.demo&&data.contacts&&<XeroContactsPanel data={data.contacts} companyId={session.company.id} onRefresh={()=>config.refetch()}/>}
       <Section title="Secure setup" className={kit.panel}>
         <p>Keep your credentials out of GitHub, chat and screenshots. Enter them only in the Railway test app's protected Variables screen.</p>
         <Steps>
@@ -94,7 +95,7 @@ export function XeroPanel() {
           <Step>After the code has been reviewed and a test deployment authorised, set XERO_CLIENT_ID, XERO_CLIENT_SECRET and XERO_REDIRECT_URI on that test app service. Set XERO_ENABLED=true. Keep XERO_ALLOW_LIVE_CONNECTION=false.</Step>
           <Step>Connect with the Xero Demo Company only. Do not configure the production app or connect real books during development.</Step>
         </Steps>
-        <p>Request only offline_access and accounting.settings.read for this connection-only version. More permissions will be requested when the financial features are ready.</p>
+        <p>Request offline_access, accounting.settings.read and accounting.contacts for this customer stage. No invoice/payment or sending permissions are requested.</p>
       </Section>
     </div>}
   </>;

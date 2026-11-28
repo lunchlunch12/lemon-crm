@@ -298,10 +298,10 @@ export const LINK_ACCESS = ["Read the events on the calendars you add", "Nothing
 export const APP_INFO: Record<string, AppInfo> = {
   xero: {
     developer: "Xero",
-    tagline: "Secure accounting connection — synchronisation is being developed",
-    about: "Connect the Xero Demo Company and check the connection. Customer, invoice, quote and payment synchronisation are not available in this version.",
+    tagline: "Reviewed customer synchronisation with Xero Demo Company",
+    about: "Connect Xero Demo Company, review and match customers in both directions, and select existing accounts and GST rates. Invoice, quote and payment synchronisation remain unavailable in this stage.",
     highlights: [],
-    access: ["Read organisation settings", "Keep the connection signed in"],
+    access: ["Read organisation settings", "Read and apply reviewed customer/contact changes in Demo Company", "Keep the connection signed in"],
     connectsWith: "Owner's Xero sign-in",
     website: "https://www.xero.com/",
   },
