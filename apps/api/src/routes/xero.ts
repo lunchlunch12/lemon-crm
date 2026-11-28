@@ -9,6 +9,8 @@ import { randomId, safeEqual, signToken, toBase64Url, verifyToken } from "../lib
 import { HttpError, readJson } from "../lib/http";
 import { adminClient } from "../lib/supabase";
 import { configured, deleteXeroConnection, loadXero, newXeroState, saveXero, withXeroLease, xeroAccess, xeroConnections, xeroOrganisation, xeroRedirect, xeroTokens, XERO_SCOPES } from "../integrations/xero";
+import { applyContact, applySchema, loadCatalogue, pauseXeroSync, previewContacts, previewPage, readSyncHistory, reconcileContact, saveSyncContext, syncContext, syncRpc, syncSettingsSchema, syncStatus, tenantSync, validateMappings } from "../integrations/xeroSync";
+import { pricingPreview, pricingSchema } from "../integrations/xeroModel";
 
 export const xero = new Hono<AppEnv>();
 const COOKIE = "lemon_xero_oauth";
@@ -56,6 +58,7 @@ xero.get("/callback", async (c) => {
       delete saved.selected;
       delete saved.checked_at;
       saved.paused = true;
+      pauseXeroSync(saved);
       await saveXero(c.env, db, state.company, lease, saved);
     });
     return done("connected");
@@ -78,6 +81,7 @@ xero.get("/config", async (c) => {
     sync_implemented: false, live_mode_available: false, live_connection_allowed: c.env.XERO_ALLOW_LIVE_CONNECTION === "true",
     authorised: Boolean(saved.token), selected: saved.selected ? { name: saved.selected.tenantName, demo: saved.selected.demo } : null,
     checked_at: saved.checked_at ?? null, token_expired: saved.token ? saved.token.expires <= Date.now() : false,
+    contacts: syncStatus(saved),
   });
 });
 
@@ -85,7 +89,7 @@ xero.get("/config", async (c) => {
 xero.use("*", async (c, next) => {
   // The owner must still be able to forget local tokens after credentials are
   // removed or the feature is disabled. Remote disconnect validates setup below.
-  if (c.req.path === "/api/apps/xero/disconnect") return next();
+  if (["/api/apps/xero/disconnect","/api/apps/xero/sync/settings","/api/apps/xero/sync/history"].includes(c.req.path)) return next();
   if (!configured(c.env)) throw new HttpError(503, "Xero is disabled or not configured on this server.");
   xeroRedirect(c.env);
   await next();
@@ -178,7 +182,46 @@ xero.post("/disconnect", async (c) => {
       const token = await xeroAccess(c.env, db, c.var.companyId, lease, saved);
       await deleteXeroConnection(token, saved.selected.id);
     }
-    await saveXero(c.env, db, c.var.companyId, lease, { ...newXeroState(), mode: saved.mode });
+    pauseXeroSync(saved);
+    await saveXero(c.env, db, c.var.companyId, lease, { ...newXeroState(), mode: saved.mode, sync: saved.sync });
     return c.json({ ok: true, remote_connection_removed: !local_only && Boolean(saved.selected) });
   });
+});
+
+// Contact/settings operations stay human-owner-only under the middleware above. There are
+// deliberately no invoice/payment, sending, worker or webhook routes in this stage.
+xero.post("/sync/catalogue", async c => {
+  const db=adminClient(c.env);
+  return withXeroLease(db,c.var.companyId,async lease=>{const ctx=await syncContext(c.env,db,c.var.companyId,lease);const catalogue=await loadCatalogue(ctx);await saveSyncContext(ctx);return c.json({catalogue});});
+});
+xero.put("/sync/settings",async c=>{
+  const settings=await readJson(c,syncSettingsSchema);const db=adminClient(c.env);
+  return withXeroLease(db,c.var.companyId,async lease=>{
+    // Pausing must never depend on a working catalogue endpoint or contact permission.
+    if(settings.paused){const saved=await loadXero(c.env,db,c.var.companyId);const t=tenantSync(saved);t.settings=settings;delete t.preview;await saveXero(c.env,db,c.var.companyId,lease,saved);return c.json({ok:true});}
+    if(!configured(c.env))throw new HttpError(503,"Xero is disabled or not configured.");
+    const ctx=await syncContext(c.env,db,c.var.companyId,lease);const catalogue=await loadCatalogue(ctx);validateMappings(settings,catalogue);if(!ctx.state.token!.scopes.split(" ").includes("accounting.contacts"))throw new HttpError(409,"Reconnect for contact permission first.");
+    ctx.t.settings=settings;delete ctx.t.preview;await saveSyncContext(ctx);return c.json({ok:true});});
+});
+xero.post("/sync/preview",async c=>{
+  const {direction}=await readJson(c,z.object({direction:z.enum(["incoming","outgoing"])}).strict());const db=adminClient(c.env);
+  return withXeroLease(db,c.var.companyId,async lease=>{const ctx=await syncContext(c.env,db,c.var.companyId,lease,true);return c.json(await previewContacts(ctx,direction));});
+});
+xero.get("/sync/preview",async c=>{
+  const page=z.coerce.number().int().min(0).max(80).safeParse(c.req.query("page")??0);if(!page.success)throw new HttpError(400,"Choose a valid preview page.");
+  const saved=await loadXero(c.env,adminClient(c.env),c.var.companyId);return c.json(previewPage({t:tenantSync(saved)},page.data));
+});
+xero.post("/sync/apply",async c=>{
+  const input=await readJson(c,applySchema);const db=adminClient(c.env);
+  return withXeroLease(db,c.var.companyId,async lease=>{const ctx=await syncContext(c.env,db,c.var.companyId,lease,true);return c.json(await applyContact(ctx,input));});
+});
+xero.post("/sync/reconcile",async c=>{
+  const db=adminClient(c.env);return withXeroLease(db,c.var.companyId,async lease=>{const ctx=await syncContext(c.env,db,c.var.companyId,lease,true);return c.json(await reconcileContact(ctx));});
+});
+xero.get("/sync/history",async c=>{
+  const db=adminClient(c.env);const saved=await loadXero(c.env,db,c.var.companyId);
+  return c.json({history:await syncRpc(db,"xero_sync_get_history",{p_company:c.var.companyId,p_tenant:saved.selected?.tenantId??null})});
+});
+xero.post("/sync/pricing",async c=>{
+  const input=await readJson(c,pricingSchema);try{return c.json(pricingPreview(input));}catch{throw new HttpError(400,"Check the NZD amounts and tax rates (0 to 100 percent).");}
 });
