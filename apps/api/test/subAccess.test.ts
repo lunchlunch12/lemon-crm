@@ -315,6 +315,9 @@ function signedInRoutes() {
     "GET /api/apps/xero/config", "POST /api/apps/xero/connect",
     "POST /api/apps/xero/organisations", "POST /api/apps/xero/select",
     "POST /api/apps/xero/check", "PUT /api/apps/xero/settings", "POST /api/apps/xero/disconnect",
+    "POST /api/apps/xero/sync/catalogue", "PUT /api/apps/xero/sync/settings", "POST /api/apps/xero/sync/preview",
+    "GET /api/apps/xero/sync/preview", "POST /api/apps/xero/sync/apply", "POST /api/apps/xero/sync/reconcile",
+    "GET /api/apps/xero/sync/history", "POST /api/apps/xero/sync/pricing",
   ]) routes.set(route, true);
   return [...routes].filter(([, signedIn]) => signedIn).map(([key]) => key);
 }

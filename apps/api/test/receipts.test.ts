@@ -20,6 +20,7 @@ const PDF = new TextEncoder().encode("%PDF-1.7\n%âãÏÓ\n");
 function claude(text: string) {
   const asked: Array<Record<string, any>> = [];
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+    if(String(input instanceof Request ? input.url : input).endsWith("/rpc/xero_ai_blocked"))return Response.json(false);
     // The database has no keys or settings for the company.
     if (String(input instanceof Request ? input.url : input).startsWith(env.SUPABASE_URL)) return Response.json([]);
     asked.push(JSON.parse(String(init?.body ?? "{}")));

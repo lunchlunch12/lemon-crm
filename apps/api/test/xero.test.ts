@@ -4,7 +4,7 @@ import { app } from "../src/app";
 import type { Env } from "../src/env";
 import { decryptJson, encryptJson } from "../src/lib/crypto";
 import type { Db } from "../src/lib/supabase";
-import { loadXero, newXeroState, saveXero, withXeroLease, xeroAccess, xeroRedirect, XERO_SCOPES, type XeroState } from "../src/integrations/xero";
+import { loadXero, newXeroState, saveXero, withXeroLease, xeroAccess, xeroRedirect, XERO_SCOPES, XERO_CONNECTION_SCOPES, type XeroState } from "../src/integrations/xero";
 
 const current = vi.hoisted(() => ({ db: null as unknown }));
 vi.mock("../src/lib/supabase", async (original) => ({
@@ -63,6 +63,21 @@ const orgResponse = (demo = true) => Response.json({ Organisations: [{ Organisat
 
 beforeEach(() => { vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("Unexpected HTTP: tests must stub every request"); })); });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+describe("Xero contact permission upgrade",()=>{
+  it("continues refreshing an existing settings-only grant without demanding contact access",async()=>{
+    const db=fakeDb();const state=connected();state.token!.scopes=XERO_CONNECTION_SCOPES;state.token!.expires=0;await db.keep(state);
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({access_token:"fictional_new_access",refresh_token:"fictional_new_refresh",expires_in:1800,scope:XERO_CONNECTION_SCOPES}));
+    await withXeroLease(db.db,COMPANY,async lease=>expect(await xeroAccess(env,db.db,COMPANY,lease,state)).toBe("fictional_new_access"));
+    expect((await loadXero(env,db.db,COMPANY)).token?.scopes).toBe(XERO_CONNECTION_SCOPES);
+  });
+  it.each([['sync/catalogue','POST'],['sync/preview','POST'],['sync/apply','POST'],['sync/reconcile','POST'],['sync/history','GET'],['sync/settings','PUT'],['sync/pricing','POST']])("refuses assistant administration of %s",async(path,method)=>{
+    const db=fakeDb();db.state.oauth=true;expect((await call(path,{},method)).status).toBe(403);expect(fetch).not.toHaveBeenCalled();
+  });
+  it.each([['sync/catalogue','POST'],['sync/preview','POST'],['sync/apply','POST'],['sync/reconcile','POST'],['sync/history','GET'],['sync/settings','PUT'],['sync/pricing','POST']])("refuses non-owner administration of %s",async(path,method)=>{
+    const db=fakeDb();db.state.role="office";expect((await call(path,{},method)).status).toBe(403);expect(fetch).not.toHaveBeenCalled();
+  });
+});
 
 describe("Xero owner-only configuration", () => {
   it("is off without explicit enablement; live mode and sync stay blocked", async () => {
